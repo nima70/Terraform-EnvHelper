@@ -1,0 +1,27 @@
+# Ignore .env file containing sensitive environment variables
+.env
+
+# Terraform local state files
+*.tfstate
+*.tfstate.backup
+
+# Lock files
+.terraform.lock.hcl
+
+# Ignore Terraform directories, including providers
+.terraform/
+
+# Ignore crash logs
+crash.log
+
+# Ignore any log files
+*.log
+
+# Ignore JQ output JSON files (if you create any temporarily)
+*.json
+
+# Ignore shell history
+.history
+
+# macOS-specific files
+.DS_Store
