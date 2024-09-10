@@ -1,6 +1,12 @@
 # Terraform-EnvHelper
 
-**Terraform-EnvHelper** is an open-source project designed to load environment variables from a `.env` file and pass them into Terraform. This tool is particularly useful for managing sensitive data like API keys, AWS credentials, and database passwords without hardcoding them in your Terraform configuration files.
+## Introduction
+Have you grown tired of AWS Secrets Manager's costs? Worried about exposing your secrets in your Terraform projects due to security concerns? Look no further - Terraform-EnvHelper is here to solve these problems.
+As you may already know, Terraform does not natively support .env files. Traditionally, the only way to manage secrets is to either expose them manually before running terraform init and terraform apply, or set the variables in the OS. Neither of these approaches is scalable:
+- Manually exposing secrets is repetitive and error-prone.
+- Setting environment variables in the OS can lead to conflicts across projects and cluttered environments.
+
+That's why I created Terraform-EnvHelper - a solution that lets you use .env files with Terraform easily and securely.
 
 ## Key Features
 
