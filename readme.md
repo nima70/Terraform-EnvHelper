@@ -1,7 +1,7 @@
 # Terraform-EnvHelper
 
 ## Introduction
-Have you grown tired of AWS Secrets Manager's costs? Worried about exposing your secrets in your Terraform projects due to security concerns? Or perhaps you're frustrated with managing multiple configuration files for different projects? Why shouldn't a typical .env file—something so familiar in other development workflows—work seamlessly in Terraform?
+Have you grown tired of AWS Secrets Manager’s costs? Worried about exposing your secrets in your Terraform projects due to security concerns? Or perhaps you’re frustrated with managing multiple configuration files for different projects? Or for whatever reason, you are forced to keep your secrets only in a .env file? Why shouldn’t a typical .env file—something so familiar in other development workflows—work seamlessly in Terraform?
 
 Look no further—Terraform-EnvHelper is here to solve these problems.
 
