@@ -63,7 +63,6 @@ setup() {
   validate_env_vars "system_key_id" "system_secret_key" "system_db_password"
 }
 
-
 # Test dynamic construction of jq command
 @test "Check if jq command is dynamically constructed" {
   # Create a basic .env file with test values
@@ -75,4 +74,43 @@ setup() {
 
   # Validate environment variables in the extracted JSON
   validate_env_vars "dynamic_test_key_id" "dynamic_test_secret_key" "dynamic_test_db_password"
+}
+
+# Test handling of an invalid JSON structure in env_vars.json
+@test "Error on invalid JSON structure in env_vars.json" {
+  # Invalid JSON (object instead of array)
+  echo '{"aws_access_key_id": "value"}' > invalid_env_vars.json
+
+  # Run the script and expect a failure
+  run bash read_env.sh "test.env" "invalid_env_vars.json"
+  
+  # Ensure the script failed with the correct error
+  [ "$status" -eq 1 ]
+  [ "$output" = "Error: Invalid JSON structure in invalid_env_vars.json. It must be a non-empty array of strings." ]
+}
+
+# Test handling of an empty env_vars.json file
+@test "Error on empty env_vars.json" {
+  # Empty JSON array
+  echo '[]' > empty_env_vars.json
+
+  # Run the script and expect a failure
+  run bash read_env.sh "test.env" "empty_env_vars.json"
+  
+  # Ensure the script failed with the correct error
+  [ "$status" -eq 1 ]
+  [ "$output" = "Error: Invalid JSON structure in empty_env_vars.json. It must be a non-empty array of strings." ]
+}
+
+# Test handling of a valid but malformed JSON
+@test "Error on malformed JSON in env_vars.json" {
+  # Malformed JSON
+  echo '[aws_access_key_id, aws_secret_access_key]' > malformed_env_vars.json
+
+  # Run the script and expect a failure
+  run bash read_env.sh "test.env" "malformed_env_vars.json"
+  
+  # Ensure the script failed due to invalid JSON
+  [ "$status" -eq 1 ]
+  [ "$output" = "Error: Invalid JSON structure in malformed_env_vars.json. It must be a non-empty array of strings." ]
 }

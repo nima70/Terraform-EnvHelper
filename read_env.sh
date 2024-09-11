@@ -1,21 +1,68 @@
 #!/bin/bash
 
-# Default file names
+# Default file names with validation
 ENV_FILE=${1:-.env}
 ENV_VARS_FILE=${2:-env_vars.json}
 
-# Load the environment variable names from the specified JSON file
-ENV_VARS=$(jq -r '.[]' "$ENV_VARS_FILE")
+# Function to validate file names and ensure safe patterns
+validate_file_name() {
+  local file_name=$1
+  local allowed_pattern='^[a-zA-Z0-9._-]+$'
 
-# Function to check if .env file exists and load it
+  if [[ ! $file_name =~ $allowed_pattern ]]; then
+    echo "Error: Invalid file name '$file_name'. Only alphanumeric characters, dashes, underscores, and periods are allowed." >&2
+    exit 1
+  fi
+
+  # Check if the file has the correct extension (.env or .json)
+  if [[ $file_name != *.env && $file_name != *.json ]]; then
+    echo "Error: Unsupported file type for '$file_name'. Only .env and .json files are allowed." >&2
+    exit 1
+  fi
+}
+
+# Validate the environment variable file names for safety
+validate_file_name "$ENV_FILE"
+validate_file_name "$ENV_VARS_FILE"
+
+# Function to validate the structure of the JSON file
+validate_json_file() {
+  local json_file=$1
+
+  # Check if the file contains valid JSON and is an array of strings
+  if ! jq -e '. | type == "array" and (length > 0) and (.[0] | type == "string")' "$json_file" > /dev/null 2>&1; then
+    echo "Error: Invalid JSON structure in $json_file. It must be a non-empty array of strings." >&2
+    exit 1
+  fi
+}
+
+# Validate the structure of the env_vars.json file
+validate_json_file "$ENV_VARS_FILE"
+
+
+# Function to manually load .env variables without exporting them to subshells
 load_env_file() {
   if [ -f "$ENV_FILE" ]; then
-    echo "$ENV_FILE file found. Loading environment variables from $ENV_FILE." >&2  # Print debug message to stderr
-    set -o allexport
-    source "$ENV_FILE"
-    set +o allexport
+    echo "$ENV_FILE file found. Loading environment variables from $ENV_FILE." >&2
+    
+    # Manually read .env variables without using set -o allexport
+    while IFS='=' read -r key value || [[ -n "$key" ]]; do
+      if [[ ! "$key" =~ ^# && "$key" != "" ]]; then
+        key=$(echo "$key" | xargs)    # Trim spaces
+        value=$(echo "$value" | xargs)  # Trim spaces
+
+        # Validate variable values
+        if [ -z "$value" ]; then
+          echo "Error: Value for $key cannot be empty." >&2
+          exit 1
+        fi
+
+        export "$key=$value"  # Manually export each key-value pair
+      fi
+    done < "$ENV_FILE"
+    
   else
-    echo "$ENV_FILE file not found. Using system environment variables." >&2  # Print debug message to stderr
+    echo "$ENV_FILE file not found. Using system environment variables." >&2
   fi
 }
 
@@ -26,14 +73,15 @@ load_env_file
 declare -A env_values
 
 # Loop through the list and check if the corresponding environment variables are set
-for var_name in $ENV_VARS; do
+for var_name in $(jq -r '.[]' "$ENV_VARS_FILE"); do
   var_upper=$(echo "$var_name" | tr '[:lower:]' '[:upper:]')
 
   # Fetch the value from either the .env file or system environment
   env_value="${!var_upper}"
 
   if [ -z "$env_value" ]; then
-    echo "Error: $var_upper is not set. Exiting." >&2  # Print error message to stderr
+    # Secure error logging: Do not log sensitive information
+    echo "Error: $var_upper is not set. Exiting." >&2
     exit 1
   fi
 
@@ -45,7 +93,7 @@ done
 jq_args=""
 jq_object=""
 
-for var_name in $ENV_VARS; do
+for var_name in $(jq -r '.[]' "$ENV_VARS_FILE"); do
   jq_args+=" --arg ${var_name} \"${env_values[$var_name]}\""
   if [[ -z "$jq_object" ]]; then
     jq_object="\"$var_name\": \$$var_name"
