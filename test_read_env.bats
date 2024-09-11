@@ -114,3 +114,27 @@ setup() {
   [ "$status" -eq 1 ]
   [ "$output" = "Error: Invalid JSON structure in malformed_env_vars.json. It must be a non-empty array of strings." ]
 }
+
+# Test handling of invalid file names
+@test "Error on invalid file names" {
+  # Invalid file name with a directory path
+  run bash read_env.sh "invalid/env" "test_env_vars.json"
+  
+  # Ensure the script failed with the correct error message
+  [ "$status" -eq 1 ]
+  [ "$output" = "Error: Unsupported file type for 'invalid/env'. Only .env and .json files are allowed." ]
+}
+
+# Test verbose logging
+@test "Run script with --verbose flag and validate output" {
+  # Run with verbose mode
+  run bash read_env.sh "test.env" "test_env_vars.json" --verbose
+  
+  # Ensure the script succeeded
+  [ "$status" -eq 0 ]
+  
+  # Check that the verbose output includes the expected log messages
+  [[ "$output" == *"Loading environment variables from"* ]]
+  [[ "$output" == *"Setting environment variable: AWS_ACCESS_KEY_ID"* ]]
+  [[ "$output" == *"Generating JSON output using jq"* ]]
+}

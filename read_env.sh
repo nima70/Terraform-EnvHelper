@@ -1,8 +1,41 @@
 #!/bin/bash
 
 # Default file names with validation
-ENV_FILE=${1:-.env}
-ENV_VARS_FILE=${2:-env_vars.json}
+ENV_FILE=""
+ENV_VARS_FILE=""
+VERBOSE_MODE=false
+
+# Parse arguments for file names and --verbose flag
+while [[ "$1" ]]; do
+  case $1 in
+    --verbose)
+      VERBOSE_MODE=true
+      ;;
+    *.env)
+      ENV_FILE="$1"
+      ;;
+    *.json)
+      ENV_VARS_FILE="$1"
+      ;;
+    *)
+      echo "Error: Unsupported file type for '$1'. Only .env and .json files are allowed." >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+# Default file names if not provided
+ENV_FILE=${ENV_FILE:-.env}
+ENV_VARS_FILE=${ENV_VARS_FILE:-env_vars.json}
+
+# Function for logging messages
+log() {
+  local message=$1
+  if [ "$VERBOSE_MODE" = true ]; then
+    echo "$message" >&2
+  fi
+}
 
 # Function to validate file names and ensure safe patterns
 validate_file_name() {
@@ -39,11 +72,10 @@ validate_json_file() {
 # Validate the structure of the env_vars.json file
 validate_json_file "$ENV_VARS_FILE"
 
-
 # Function to manually load .env variables without exporting them to subshells
 load_env_file() {
   if [ -f "$ENV_FILE" ]; then
-    echo "$ENV_FILE file found. Loading environment variables from $ENV_FILE." >&2
+    log "$ENV_FILE file found. Loading environment variables from $ENV_FILE."
     
     # Manually read .env variables without using set -o allexport
     while IFS='=' read -r key value || [[ -n "$key" ]]; do
@@ -57,6 +89,7 @@ load_env_file() {
           exit 1
         fi
 
+        log "Setting environment variable: $key"  # Log only in verbose mode
         export "$key=$value"  # Manually export each key-value pair
       fi
     done < "$ENV_FILE"
@@ -85,6 +118,7 @@ for var_name in $(jq -r '.[]' "$ENV_VARS_FILE"); do
     exit 1
   fi
 
+  log "$var_upper is set and will be included in the output."  # Verbose logging
   # Store the value in the associative array
   env_values[$var_name]="$env_value"
 done
@@ -101,6 +135,8 @@ for var_name in $(jq -r '.[]' "$ENV_VARS_FILE"); do
     jq_object+=", \"$var_name\": \$$var_name"
   fi
 done
+
+log "Generating JSON output using jq."  # Verbose logging
 
 # Print JSON output to stdout
 eval "jq -n $jq_args '{$jq_object}'"
