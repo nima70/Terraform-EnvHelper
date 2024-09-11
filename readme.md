@@ -13,6 +13,43 @@ As you may already know, Terraform does not natively support .env files. Traditi
 
 That's why I created Terraform-EnvHelper—a simple yet powerful solution that allows you to use .env files with Terraform, making secret management easier, more secure, and more scalable.
 
+## Why Not Use Simple `config.json` Files?
+
+While using `config.json` files to manage your secrets and configurations may seem like a simple solution, environment variables offer significant advantages, especially when it comes to **CI/CD pipelines**. Here’s why environment variables are a better choice:
+
+### Easier to Handle in CI/CD Pipelines
+Most CI/CD tools and platforms are optimized for handling environment variables, allowing you to inject sensitive information dynamically during your deployment process. Configuring secrets through environment variables is often as simple as setting them in your CI/CD pipeline, eliminating the need to manage multiple JSON files across environments.
+
+### Security
+Injecting environment variables directly into the runtime during CI/CD is more secure than committing and pushing configuration files that might contain sensitive data. Even if the `config.json` file is ignored by version control, there’s always the risk of accidental exposure.
+
+### Flexibility Across Environments
+Environment variables allow you to easily switch between development, staging, and production environments without needing to create separate configuration files. This makes managing secrets across multiple environments much more straightforward.
+
+### Built-in Support
+CI/CD services like **GitHub Actions**, **CircleCI**, **GitLab CI**, and **Jenkins** have built-in support for securely handling environment variables. They allow secrets to be injected directly into the build or deployment process without being exposed in code or configuration files.
+
+
+## Who This Project is Best For:
+
+### Small to Medium Projects:
+
+This approach works well for smaller-scale infrastructure projects or when working on personal or local environments.
+
+### Local Development:
+
+Developers working on local development or testing environments where using costly secrets management services isn't necessary.
+
+### Cost-Conscious Projects:
+
+If you're trying to avoid the cost associated with cloud secret management services for smaller projects, this project provides an effective alternative.
+
+## Security Considerations
+
+While Terraform-EnvHelper is a great solution for local development and cost-conscious projects, it’s important to note that `.env` files are not as secure as cloud-based secret management solutions. For production environments, you should consider encrypting your `.env` files or using a more robust solution like AWS Secrets Manager or HashiCorp Vault.
+
+
+
 ## Key Features
 
 - Load environment variables from a `.env` file for use in Terraform.
@@ -66,7 +103,8 @@ Run the provided `read_env.sh` script to load environment variables from the `.e
 
 ```bash
 bash read_env.sh
-terraform init terraform apply`
+terraform init
+terraform apply
 ```
 
 **Terraform-EnvHelper** uses the `external` data source in Terraform along with a shell script (`read_env.sh`) to load environment variables from the `.env` file. These environment variables are then passed into Terraform for use in your configurations, allowing you to keep sensitive data secure and out of your codebase.
@@ -185,6 +223,24 @@ output "db_password" {
 - **Simplicity**: Automatically load environment variables from a `.env` file.
 - **Customizability**: Specify different .env and env_vars.json files to adapt to different environments.
 - **Linux Compatibility**: Works seamlessly on **Linux/Ubuntu** environments.
+
+## Contribution
+
+We welcome contributions to Terraform-EnvHelper! If you'd like to contribute, here’s how you can get involved:
+
+### Reporting Issues
+If you encounter any bugs or have suggestions for improvements, feel free to open an issue in the GitHub repository. Please include a clear description of the issue and, if possible, steps to reproduce it.
+
+### Submitting Changes
+If you'd like to submit code changes, you can fork the repository, make your changes, and submit a pull request. Please ensure that your pull request includes:
+- A clear description of the changes.
+- Adherence to the project’s existing style and structure.
+- Any necessary updates to documentation.
+
+### Feedback and Ideas
+We’re always open to feedback and ideas for improving the project. If you have suggestions or would like to discuss new features, open an issue or start a discussion in the GitHub repository.
+
+Thank you for your interest in contributing to Terraform-EnvHelper!
 
 ## License
 
